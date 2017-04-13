@@ -7,3 +7,8 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+31f7071e58-private.pem.key
+31f7071e58-public.pem.key
+certificateFirstThing.cert.pem.crt
+VeriSign-Class 3-Public-Primary-Certification-Authority-G5.pem
+.idea/
