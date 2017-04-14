@@ -11,17 +11,13 @@ public class MyDevice extends AWSIotDevice{
 
 
     public void setSending(boolean sending){
-        System.out.println("Desired state for sending: " + sending);
+        //System.out.println("Desired state for sending: " + sending);
         this.sending = sending;
     }
 
     public boolean getSending(){
-        System.out.println("Reported state for sending: " + sending);
+        //System.out.println("Reported state for sending: " + sending);
         return this.sending;
     }
 
-    @Override
-    public void onShadowUpdate(String json){
-        System.out.println("I got shadow update!");
-    }
 }

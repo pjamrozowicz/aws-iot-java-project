@@ -31,7 +31,6 @@ public class StatsSender {
 
         client.attach(myDevice);
         client.connect();
-        myDevice.delete();
 
         AWSIotConnectionStatus status = AWSIotConnectionStatus.DISCONNECTED;
 
@@ -47,6 +46,7 @@ public class StatsSender {
                 if(!payload.equals("NaN")){
                     if(myDevice.getSending()) client.publish(new StatsMessage(topic,qos, payload),timeout);
                 }
+
                 Thread.sleep(1000);
             } catch (Exception e) {
                 e.printStackTrace();
