@@ -1,44 +1,58 @@
-import com.amazonaws.services.iot.client.AWSIotException;
-import com.amazonaws.services.iot.client.AWSIotMqttClient;
-import com.amazonaws.services.iot.client.AWSIotQos;
+import com.amazonaws.services.iot.client.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 
 
-public class ComputerStatsGetter {
+public class StatsSender {
+    private MyDevice myDevice;
 
-    public static void main(String[] args) throws AWSIotException {
+    public StatsSender(MyDevice myDevice){
+        this.myDevice = myDevice;
+    }
 
-        String clientEndpoint   = "private";
-        String clientId         = "MSISender";
+    public void launch() throws AWSIotException, IOException {
+        String clientEndpoint   = "afvm3xhclkq9c.iot.us-east-1.amazonaws.com";
         String certificateFile  = "certificateFirstThing.cert.pem.crt";
         String privateKeyFile   = "31f7071e58-private.pem.key";
+        AWSIotQos qos           = AWSIotQos.QOS0;
+        int timeout             = 3000;
 
         SampleUtil.KeyStorePasswordPair pair = SampleUtil.getKeyStorePasswordPair(certificateFile, privateKeyFile);
-        AWSIotMqttClient client = new AWSIotMqttClient(clientEndpoint, clientId, pair.keyStore, pair.keyPassword);
+        AWSIotMqttClient client = new AWSIotMqttClient(clientEndpoint, myDevice.getThingName(), pair.keyStore, pair.keyPassword);
+        client.setWillMessage(new AWSIotMessage("client/disconnect", AWSIotQos.QOS0, client.getClientId()));
+        String topic = "CPU/usage/" + myDevice.getThingName();
 
+        client.attach(myDevice);
         client.connect();
-        System.out.println("Connected!");
-        String topic = "CPU/usage";
+        myDevice.delete();
 
-        for(int i=0;i<100;i++){
+        AWSIotConnectionStatus status = AWSIotConnectionStatus.DISCONNECTED;
+
+        while(true){
+            AWSIotConnectionStatus newStatus = client.getConnectionStatus();
+            if (!status.equals(newStatus)) {
+                System.out.println(System.currentTimeMillis() + " Connection status changed to " + newStatus);
+                status = newStatus;
+            }
+
             try {
                 String payload = String.valueOf(getProcessCpuLoad());
                 if(!payload.equals("NaN")){
-                    System.out.println("Publishing: " + payload);
-                    client.publish(topic, AWSIotQos.QOS0, payload);
+                    if(myDevice.getSending()) client.publish(new StatsMessage(topic,qos, payload),timeout);
                 }
                 Thread.sleep(1000);
             } catch (Exception e) {
                 e.printStackTrace();
+                client.disconnect();
             }
         }
-
-        client.disconnect();
 
     }
 
