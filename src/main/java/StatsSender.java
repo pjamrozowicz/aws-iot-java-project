@@ -1,6 +1,4 @@
 import com.amazonaws.services.iot.client.*;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -42,7 +40,7 @@ public class StatsSender {
             }
 
             try {
-                String payload = String.valueOf(getProcessCpuLoad());
+                String payload = myDevice.getThingName() + ": " + String.valueOf(getProcessCpuLoad());
                 if(!payload.equals("NaN")){
                     if(myDevice.getSending()) client.publish(new StatsMessage(topic,qos, payload),timeout);
                 }
